@@ -1,18 +1,19 @@
-// 添加消息监听器
+// Add message listener
+const GET_LINKS_ACTION = "getLinks";
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "getLinks") {
-    // 获取所有链接
+  if (message.action === GET_LINKS_ACTION) {
+    // Get all links
     const links = Array.from(
       document.querySelectorAll(
-        // "#content_listContainer > li > div.details > div > div.detailsValue > ul > li > a"
         "#content_listContainer a"
       )
-    ).map((link) => ({
-      href: link.href,
-      textContent: link.textContent,
+    ).map(({ href, textContent }) => ({
+      href,
+      textContent,
     }));
 
-    // 发送链接列表作为响应
+    // Send the list of links as a response
     sendResponse({ links: links });
   }
 });

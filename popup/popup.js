@@ -1,138 +1,107 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const openLinksButton = document.getElementById("openLinks");
+  const openLinksButton = document.getElementById("findLinks");
   const downloadLinksButton = document.getElementById("downloadLinks");
   const openLinksInNewWindowButton = document.getElementById(
     "openLinksInNewWindow"
   );
   const linkList = document.getElementById("linkList");
 
-  openLinksButton.addEventListener("click", function () {
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      chrome.tabs.sendMessage(
-        tabs[0].id,
-        { action: "getLinks" },
-        async function (response) {
-          if (response && response.links) {
-            // 处理重定向链接
-            const resolvedLinks = await Promise.all(
-              response.links.map(async (link) => {
-                try {
-                  const response = await fetch(link.href, {
-                    method: "HEAD",
-                    redirect: "follow",
-                  });
-                  return { href: response.url, textContent: link.textContent };
-                } catch (error) {
-                  console.error("Error resolving link:", link, error);
-                  return link; // 返回原始链接作为回退
-                }
-              })
-            );
+  let activeTab;
 
-            // 清空现有的链接列表
-            linkList.innerHTML = "";
-
-            // 显示链接列表
-            resolvedLinks.forEach((link) => {
-              const listItem = document.createElement("li");
-              const linkElement = document.createElement("a");
-              linkElement.href = link.href;
-              linkElement.textContent = link.textContent;
-              linkElement.target = "_blank";
-              listItem.appendChild(linkElement);
-              linkList.appendChild(listItem);
-            });
-          }
-        }
-      );
-    });
-  });
-
-  downloadLinksButton.addEventListener("click", function () {
-    // 获取当前标签页的所有链接
-    const links = document.getElementsByTagName("a");
-
-    // 获取当前标签页的标题
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      let pageTitle = tabs[0].title;
-      // 移除或替换不允许的字符
-      // pageTitle = pageTitle.replace(/[<>:"/\\|?*]/g, "_");
-      // pageTitle = toHexUnicode(pageTitle); // 将文件夹名转换为16进制Unicode字符串
-
-      // 使用 chrome.downloads.download API 下载文件到指定文件夹
-      Array.from(links).forEach((link) => {
-        let fileName = link.href.split("/").pop() || "downloaded_file";
-        // fileName = fileName.replace(/[<>:"/\\|?*]/g, "_");
-        fileName = decodeURIComponent(fileName); // 将文件名转换为可读字符串
-        // 判断链接是否指向文件
-        const isFile = link.href.match(
-          /\.(jpg|jpeg|png|gif|pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar|7z|mp3|mp4|avi|mkv|txt|csv)$/i
-        );
-        if (!isFile) {
-            chrome.tabs.create({ url: link.href });
-            return;
-        }
-        chrome.downloads.download(
-          {
-            url: link.href,
-            filename: `${pageTitle}/${fileName}`, // 指定下载路径和文件名
-            saveAs: false, // 自动下载，不弹出保存对话框
-          },
-          function (downloadId) {
-            if (chrome.runtime.lastError) {
-              console.error(
-                `${fileName} Download failed:`,
-                chrome.runtime.lastError.message
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    activeTab = tabs[0];
+    if (activeTab) {
+      openLinksButton.addEventListener("click", function () {
+        chrome.tabs.sendMessage(
+          activeTab.id,
+          { action: "getLinks" },
+          async function (response) {
+            if (response && response.links) {
+              // Handle redirect links
+              const resolvedLinks = await Promise.all(
+                response.links.map(async (link) => {
+                  try {
+                    const response = await fetch(link.href, {
+                      method: "HEAD",
+                      redirect: "follow",
+                    });
+                    return {
+                      href: response.url,
+                      textContent: link.textContent,
+                    };
+                  } catch (error) {
+                    console.error("Error resolving link:", link, error);
+                    // If there's an error resolving the link, return the original link as a fallback
+                    // This ensures that the user still has access to the original link even if the redirection fails
+                    return link;
+                  }
+                })
               );
-            } else {
-              console.log("Download started with ID:", downloadId);
+              // Use document fragment to batch update the DOM
+              const fragment = document.createDocumentFragment();
+
+              resolvedLinks.forEach((link) => {
+                const listItem = document.createElement("li");
+                const linkElement = document.createElement("a");
+                linkElement.href = link.href;
+                linkElement.textContent = link.textContent;
+                linkElement.target = "_blank";
+                listItem.appendChild(linkElement);
+                fragment.appendChild(listItem);
+              });
+
+              // Clear the existing link list and add the new link list
+              linkList.innerHTML = "";
+              linkList.appendChild(fragment);
             }
           }
         );
       });
-    });
-  });
+      // Get all links in the current tab
+      downloadLinksButton.addEventListener("click", function () {
+        // Get all links in the current tab
+        const links = document.getElementsByTagName("a");
 
-  openLinksInNewWindowButton.addEventListener("click", function () {
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      chrome.tabs.sendMessage(
-        tabs[0].id,
-        { action: "getLinks" },
-        async function (response) {
-          if (response && response.links) {
-            // 处理重定向链接
-            const resolvedLinks = await Promise.all(
-              response.links.map(async (link) => {
-                try {
-                  const response = await fetch(link, {
-                    method: "HEAD",
-                    redirect: "follow",
-                  });
-                  return response.url;
-                } catch (error) {
-                  console.error("Error resolving link:", link, error);
-                  return link; // 返回原始链接作为回退
-                }
-              })
-            );
+        // Get the title of the current tab
+        let pageTitle = activeTab.title;
 
-            // 在新窗口中打开所有链接
-            chrome.windows.create(
-              { url: resolvedLinks, type: "normal" },
-              function (window) {
-                if (chrome.runtime.lastError) {
-                  console.error(
-                    "Failed to open links in new window:",
-                    chrome.runtime.lastError
-                  );
-                } else {
-                  console.log("Links opened in new window with ID:", window.id);
-                }
-              }
-            );
+        // Remove or replace disallowed characters
+        pageTitle = pageTitle.replace(/[<>:"/\\|?*]/g, "_");
+
+        // Use chrome.downloads.download API to download files to a specified folder
+        Array.from(links).forEach((link) => {
+          let fileName = link.href.split("/").pop() || "downloaded_file";
+
+          fileName = decodeURIComponent(fileName); // Convert the file name to a readable string
+          // Determine if the link points to a file
+          const isFile = link.href.match(
+            /\.(jpg|jpeg|png|gif|pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar|7z|mp3|mp4|avi|mkv|txt|csv)$/i
+          );
+          if (!isFile) {
+            // chrome.tabs.create({ url: link.href });
+            return;
           }
-        }
-      );
-    });
+          chrome.downloads.download(
+            {
+              url: link.href,
+              filename: `${pageTitle}/${fileName}`, // Specify download path and file name
+              saveAs: false, // Automatically download without popping up the save dialog
+            },
+            function (downloadId) {
+              if (chrome.runtime.lastError) {
+                console.error(
+                  `${fileName} Download failed:`,
+                  chrome.runtime.lastError.message
+                );
+              } else {
+                console.log("Download started with ID:", downloadId);
+              }
+            }
+          );
+        });
+      });
+    } else {
+      console.error("No active tab found.");
+    }
   });
 });
