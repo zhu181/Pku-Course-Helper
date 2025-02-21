@@ -1,0 +1,24 @@
+{
+  "name": "Link Reader",
+  "version": "1.0",
+  "manifest_version": 3,
+
+  "description": "A Chrome extension that reads all links on a page and opens them in new tabs.",
+  "permissions": ["tabs", "activeTab", "downloads"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": "images/icon.png"
+  },
+  "icons": {
+    "48": "images/icon.png"
+  }
+}
