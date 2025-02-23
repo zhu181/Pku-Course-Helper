@@ -1,47 +1,47 @@
-# Chrome Extension to Open All Links in New Window
+# Chrome 扩展程序：北京大学教学网课程文件批量下载
 
-This Chrome extension is designed to read all the links on the current webpage and open them in new tabs. It consists of several components that work together to provide a seamless user experience.
+这个 Chrome 扩展程序旨在读取北京大学教学网上的文件并批量下载。
 
-## Project Structure
+## 项目结构
 
 ```
 chrome-extension
 ├── src
-│   ├── background.js        # Background script for handling extension lifecycle events
-│   ├── content.js          # Content script for reading links from the webpage
-│   ├── manifest.json       # Extension configuration file
+│   ├── background.js        # 处理扩展生命周期事件的后台脚本
+│   ├── content.js          # 从网页读取链接的内容脚本
+│   ├── manifest.json       # 扩展配置文件
 │   └── popup
-│       ├── popup.html      # HTML structure for the popup interface
-│       └── popup.js        # Script for handling popup interactions
+│       ├── popup.html      # 弹出界面的 HTML 结构
+│       └── popup.js        # 处理弹出交互的脚本
 ├── images
-│   └── icon.png            # Icon for the extension
-└── README.md               # Documentation for the project
+│   └── icon.png            # 扩展图标
+└── README.md               # 项目文档
 ```
 
-## Features
+## 功能
 
-- **Read All Links**: The extension scans the current webpage for all anchor (`<a>`) tags and retrieves their `href` attributes.
-- **Open Links in New Tabs**: Users can open all found links in new tabs with a single click from the popup interface.
-- **User-Friendly Interface**: The popup provides a simple and intuitive interface for users to interact with the extension.
+- **读取所有链接**：扩展程序扫描当前网页上的所有锚点 (`<a>`) 标签并获取它们的 `href` 属性。
+- **批量下载**：用户可以通过弹出界面上的单击按钮下载链接指向的文件。
+- **用户友好界面**：弹出界面提供了一个简单直观的界面，供用户与扩展程序交互。
 
-## Installation
+## 安装
 
-1. Clone the repository or download the source code.
-2. Open Chrome and navigate to `chrome://extensions/`.
-3. Enable "Developer mode" in the top right corner.
-4. Click on "Load unpacked" and select the `chrome-extension` directory.
-5. The extension should now be installed and ready to use.
+1. 克隆仓库或下载源代码。
+2. 打开 Chrome 并导航到 `chrome://extensions/`。
+3. 在右上角启用“开发者模式”。
+4. 点击“加载已解压的扩展程序”，然后选择 `chrome-extension` 目录。
+5. 现在扩展程序应该已经安装并可以使用。
 
-## Usage
+## 使用方法
 
-1. Navigate to any webpage that contains links.
-2. Click on the extension icon in the Chrome toolbar.
-3. In the popup, click the button to open all links in new tabs.
+1. 导航到北京大学教学网，登陆后打开某个课程的“课程内容”、“课程作业”等界面。
+2. 点击 Chrome 工具栏中的扩展程序图标。
+3. 在弹出界面中，点击按钮以在新标签页中打开所有链接。
 
-## Contributing
+## 贡献
 
-Feel free to submit issues or pull requests if you have suggestions for improvements or new features.
+如果您有改进建议或新功能，欢迎提交问题或拉取请求。
 
-## License
+## 许可证
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+此项目根据 MIT 许可证授权。有关详细信息，请参阅 LICENSE 文件。
